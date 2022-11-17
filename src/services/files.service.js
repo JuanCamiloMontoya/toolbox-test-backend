@@ -10,13 +10,8 @@ const getFilesData = async (fileName) => {
 
   let formattedEndData = []
 
-  if (fileName) {
-    const formattedData = await formatFile(fileName)
-    if (formattedData)
-      formattedEndData.push(formattedData)
-
-    return formattedEndData
-  }
+  if (fileName)
+    return await formatFile(fileName)
 
   const { data: filesData } = await axios.get(`${baseUrl}/secret/files`, reqConfig)
 
@@ -26,10 +21,11 @@ const getFilesData = async (fileName) => {
 
         const formattedData = await formatFile(file)
         if (formattedData)
-          formattedEndData.push(formattedData)
+          formattedData.lines.length && formattedEndData.push(formattedData)
 
       } catch (error) {
-        console.log("ERROR", error?.response?.statusText || error.toString())
+
+        // console.log("ERROR", error?.response?.statusText || error.toString())
       }
     }
   }
@@ -45,32 +41,32 @@ const formatFile = async (fileName) => {
     const { data } = await axios.get(`${baseUrl}/secret/file/${fileName}`, reqConfig)
     fileData = data
   } catch (error) {
-    throw new Error('No es posible obtener el archivo del proveedor!')
+    throw { statusCode: 502, message: 'No es posible obtener el archivo del proveedor!' }
   }
 
   const splitData = fileData.split(/\r?\n|\r|\n/g)
-
-  if (splitData.length == 1)
-    throw { statusCode: 500, message: 'Los datos del archivo no son válidos!' }
 
   let formattedData = {
     file: fileName,
     lines: []
   }
 
-  for (let i = 1; i < splitData.length; i++) {
+  if (splitData.length > 1)
 
-    const fields = splitData[i].split(',')
+    for (let i = 1; i < splitData.length; i++) {
 
-    if (fields.length < 4)
-      continue
+      const fields = splitData[i].split(',')
 
-    formattedData.lines.push({
-      text: fields[1],
-      number: fields[2],
-      hex: fields[3]
-    })
-  }
+      if (fields.length < 4)
+        continue
+
+      formattedData.lines.push({
+        text: fields[1],
+        number: fields[2],
+        hex: fields[3]
+      })
+    }
+
   return formattedData
 }
 

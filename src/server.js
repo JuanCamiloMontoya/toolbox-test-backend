@@ -17,12 +17,10 @@ app.get('/', (req, res) => {
 app.use('/files', filesRouter)
 
 app.use((err, req, res, next) => {
-  console.log("ERR----", err)
   const statusCode = err.statusCode || 500
-  console.error(err.message, err.stack)
   res.status(statusCode).json({ 'message': err.message })
 })
 
-app.listen(port, '0.0.0.0', () => {
-  console.log(`Example app listening at http://localhost:${port}`)
+module.exports = app.listen(port, '0.0.0.0', () => {
+  console.log(`App listening at http://localhost:${port}`)
 })
